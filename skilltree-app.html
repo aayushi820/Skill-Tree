@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillTree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pine-950:#0A130E; --pine-900:#101C15; --pine-800:#16261D; --pine-700:#1E3327;
+  --moss-500:#4F9D6E; --moss-400:#6BB585; --moss-300:#94CDA9;
+  --gold-400:#E3A83B; --gold-300:#EFC57A;
+  --bark-600:#8A6B47; --bark-500:#A6835A;
+  --mist-50:#F2F6F1; --mist-100:#E6ECE3; --mist-200:#D5DED1;
+  --ink-900:#16211B; --ink-700:#3A473E; --ink-500:#647065;
+  --ink-0:#F5F8F4;
+  --danger:#D96B5A;
+
+  --bg:var(--pine-950); --surface:var(--pine-900); --surface-2:var(--pine-800);
+  --border:rgba(245,248,244,0.10); --border-strong:rgba(245,248,244,0.18);
+  --text:var(--ink-0); --text-soft:#C7D2C9; --text-mute:#8FA093;
+  --accent:var(--moss-500); --accent-soft:var(--moss-300);
+  --gold:var(--gold-400);
+  --radius:14px;
+  --font-display:'Fraunces',serif; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+html[data-theme="light"]{
+  --bg:var(--mist-50); --surface:#FFFFFF; --surface-2:var(--mist-100);
+  --border:rgba(22,33,27,0.10); --border-strong:rgba(22,33,27,0.18);
+  --text:var(--ink-900); --text-soft:#3E4B41; --text-mute:#647065;
+  --accent:#2F7A50; --accent-soft:#1F5C3B;
+  --gold:#9C6C12;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:var(--font-body); background:var(--bg); color:var(--text);
+  min-height:100vh; transition:background .25s ease, color .25s ease;
+}
+h1,h2,h3{font-family:var(--font-display); font-weight:500; letter-spacing:-0.01em;}
+button{font-family:var(--font-body); cursor:pointer;}
+.mono{font-family:var(--font-mono);}
+::selection{background:var(--accent); color:var(--ink-0);}
+
+#app{min-height:100vh;}
+.center-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.shell{display:flex; min-height:100vh;}
+.sidebar{
+  width:220px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+  padding:22px 16px; display:flex; flex-direction:column; gap:4px; transition:width .2s ease, padding .2s ease;
+}
+.sidebar.collapsed{width:68px; padding:22px 10px;}
+.sidebar.collapsed .navlabel,
+.sidebar.collapsed .brand-label,
+.sidebar.collapsed .sidebar-fields-label,
+.sidebar.collapsed .field-switch span:not(.mini-pct),
+.sidebar.collapsed .field-switch .mini-pct,
+.sidebar.collapsed .add-field-label,
+.sidebar.collapsed .sidebar-foot{display:none;}
+.sidebar.collapsed .navitem{justify-content:center; padding:10px 0;}
+.sidebar.collapsed .field-switch{justify-content:center;}
+.sidebar.collapsed .add-field-btn{justify-content:center;}
+.sidebar.collapsed .brand{justify-content:center; padding-right:0;}
+.sidebar-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.sidebar-toggle{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text-mute); border-radius:8px;
+  width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+}
+.sidebar-toggle:hover{color:var(--accent); border-color:var(--accent);}
+.brand{display:flex; align-items:center; gap:8px; padding:4px 8px 22px; font-family:var(--font-display); font-size:19px; font-weight:600;}
+.brand .dot{width:9px; height:9px; border-radius:50%; background:var(--accent);}
+.navitem{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+  color:var(--text-soft); font-size:14px; font-weight:500; border:none; background:transparent; width:100%; text-align:left;
+}
+.navitem:hover{background:var(--surface-2); color:var(--text);}
+.navitem.active{background:var(--surface-2); color:var(--text);}
+.navitem.active .navicon{color:var(--accent);}
+.navicon{width:16px; text-align:center; opacity:.9;}
+.sidebar-fields{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+.sidebar-fields-label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-mute); padding:0 12px 8px;}
+.field-switch{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; border-radius:9px;
+  font-size:12.5px; color:var(--text-soft); border:none; background:transparent; width:100%; text-align:left;
+}
+.field-switch:hover{background:var(--surface-2);}
+.field-switch.active{background:var(--surface-2); color:var(--accent); font-weight:600;}
+.field-switch .mini-pct{font-family:var(--font-mono); font-size:10.5px; color:var(--text-mute);}
+.add-field-btn{
+  display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:9px; font-size:12.5px; color:var(--accent);
+  border:1px dashed var(--border-strong); background:transparent; width:100%; margin-top:6px;
+}
+.add-field-btn:hover{border-color:var(--accent);}
+.sidebar-foot{margin-top:auto; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-mute);}
+
+.main{flex:1; min-width:0; padding:26px 34px 60px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:26px;}
+.topbar h1{font-size:24px;}
+.topbar-sub{font-size:13px; color:var(--text-mute); margin-top:3px;}
+.topbar-right{display:flex; align-items:center; gap:10px;}
+
+.theme-toggle{
+  display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:999px; padding:4px; position:relative;
+}
+.theme-toggle button{
+  border:none; background:transparent; width:30px; height:26px; border-radius:999px; font-size:13px;
+  display:flex; align-items:center; justify-content:center; color:var(--text-mute); z-index:1;
+}
+.theme-toggle button.on{color:var(--ink-0);}
+.theme-toggle .knob{
+  position:absolute; top:4px; left:4px; width:30px; height:26px; border-radius:999px; background:var(--accent);
+  transition:transform .2s ease;
+}
+html[data-theme="light"] .theme-toggle .knob{transform:translateX(34px);}
+
+.avatar{
+  width:34px; height:34px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:var(--accent); cursor:pointer;
+}
+.avatar-lg{
+  width:64px; height:64px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; color:var(--accent);
+}
+
+.stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px;}
+.stat{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+.stat-label{font-size:12px; color:var(--text-mute); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
+.stat-val{font-family:var(--font-mono); font-size:26px; font-weight:600;}
+.stat-val.gold{color:var(--gold);}
+.stat-val.accent{color:var(--accent);}
+
+.panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+
+.tree-wrap{display:flex; gap:24px; align-items:flex-start; margin-bottom:24px;}
+.tree-panel{flex:1.15; min-width:0;}
+.tree-panel svg{width:100%; height:auto; display:block;}
+.leaf-dot{transition:fill .4s ease, stroke .4s ease;}
+.branch-line{transition:stroke .4s ease, stroke-width .4s ease;}
+
+.side-panel{flex:1; display:flex; flex-direction:column; gap:14px; min-width:280px;}
+
+.module{border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden;}
+.module-head{ display:flex; align-items:center; justify-content:space-between; padding:13px 16px; cursor:pointer; background:var(--surface); }
+.module-head:hover{background:var(--surface-2);}
+.module-title{font-size:14px; font-weight:600;}
+.module-meta{font-size:12px; color:var(--text-mute); font-family:var(--font-mono);}
+.module-body{background:var(--surface); border-top:1px solid var(--border); display:none;}
+.module-body.open{display:block;}
+.topic-row{display:flex; align-items:center; gap:11px; padding:10px 16px; border-top:1px solid var(--border);}
+.topic-row:first-child{border-top:none;}
+.check{
+  width:19px; height:19px; border-radius:50%; border:1.5px solid var(--border-strong); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-0);
+}
+.check.done{background:var(--accent); border-color:var(--accent);}
+.topic-name{font-size:13.5px; flex:1;}
+.topic-name.done{color:var(--text-mute); text-decoration:line-through;}
+
+.badge-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px;}
+.badge-card{ border:1px solid var(--border); border-radius:var(--radius); padding:18px 14px; text-align:center; background:var(--surface); }
+.badge-card.locked{opacity:.4;}
+.badge-icon{
+  width:46px; height:46px; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;
+  background:var(--surface-2); font-size:20px; color:var(--gold); border:1px solid var(--border);
+}
+.badge-card.locked .badge-icon{color:var(--text-mute);}
+.badge-name{font-size:13px; font-weight:600; margin-bottom:3px;}
+.badge-desc{font-size:11.5px; color:var(--text-mute);}
+
+.proj-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; margin-top:18px;}
+.proj-card{border:1px solid var(--border); border-radius:var(--radius); padding:16px; background:var(--surface);}
+.proj-title{font-size:15px; font-weight:600; margin-bottom:5px;}
+.proj-desc{font-size:12.5px; color:var(--text-soft); margin-bottom:10px; line-height:1.5;}
+.tag-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+.tag{font-size:11px; padding:3px 9px; border-radius:999px; background:var(--surface-2); color:var(--text-soft); border:1px solid var(--border);}
+.proj-links{display:flex; gap:12px; font-size:12px;}
+.proj-links a{color:var(--accent); text-decoration:none;}
+.add-proj-btn{
+  border:1px dashed var(--border-strong); border-radius:var(--radius); background:transparent; color:var(--text-mute);
+  padding:14px; font-size:13px; width:100%; margin-top:16px;
+}
+.add-proj-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+.field{margin-bottom:13px;}
+.field label{display:block; font-size:12.5px; color:var(--text-mute); margin-bottom:6px;}
+.field input,.field textarea{
+  width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:10px 12px;
+  color:var(--text); font-size:13.5px; font-family:var(--font-body);
+}
+.field textarea{resize:vertical; min-height:70px;}
+.field input:focus,.field textarea:focus{outline:none; border-color:var(--accent);}
+
+.btn{
+  border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text); border-radius:9px;
+  padding:10px 18px; font-size:13.5px; font-weight:600;
+}
+.btn:hover{border-color:var(--accent);}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#08150E;}
+.btn-primary:hover{filter:brightness(1.07);}
+.btn-block{width:100%;}
+
+.auth-card{width:380px; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:34px;}
+.auth-logo{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
+.auth-logo .dot{width:11px; height:11px; border-radius:50%; background:var(--accent);}
+.auth-logo span{font-family:var(--font-display); font-size:21px; font-weight:600;}
+.auth-sub{font-size:13px; color:var(--text-mute); margin-bottom:24px;}
+.divider{display:flex; align-items:center; gap:10px; margin:18px 0; font-size:11.5px; color:var(--text-mute);}
+.divider::before,.divider::after{content:''; flex:1; height:1px; background:var(--border);}
+.oauth-btn{
+  display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:10px; margin-bottom:9px;
+  border-radius:9px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text); font-size:13.5px; font-weight:500;
+}
+.oauth-btn:hover{border-color:var(--accent);}
+.auth-switch{font-size:12.5px; color:var(--text-mute); text-align:center; margin-top:16px;}
+.auth-switch a{color:var(--accent); cursor:pointer; text-decoration:none;}
+.demo-note{font-size:11px; color:var(--text-mute); text-align:center; margin-top:14px; line-height:1.5;}
+
+.field-pick{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px;}
+.field-card{ border:1.5px solid var(--border); border-radius:14px; padding:16px; cursor:pointer; background:var(--surface-2); }
+.field-card:hover{border-color:var(--accent);}
+.field-card.picked{border-color:var(--accent); background:rgba(79,157,110,0.12);}
+.field-card.taken{opacity:.45; cursor:default;}
+.field-card-title{font-size:14px; font-weight:600; margin-bottom:3px;}
+.field-card-sub{font-size:11.5px; color:var(--text-mute);}
+
+.mentor-wrap{display:flex; flex-direction:column; height:calc(100vh - 150px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
+.mentor-msgs{flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px;}
+.msg{max-width:74%; padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.55;}
+.msg.mentor{background:var(--surface-2); align-self:flex-start; border-bottom-left-radius:4px;}
+.msg.user{background:var(--accent); color:#08150E; align-self:flex-end; border-bottom-right-radius:4px;}
+.msg.typing{color:var(--text-mute); font-style:italic;}
+.mentor-input{display:flex; gap:10px; padding:14px; border-top:1px solid var(--border);}
+.mentor-input input{flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:11px 14px; color:var(--text); font-size:13.5px;}
+.mentor-input input:focus{outline:none; border-color:var(--accent);}
+
+.streak-flame{font-family:var(--font-mono); display:flex; align-items:center; gap:6px;}
+
+.profile-head{display:flex; align-items:center; gap:18px; margin-bottom:26px;}
+.profile-name{font-size:19px; font-weight:600;}
+.profile-sub{font-size:13px; color:var(--text-mute); margin-top:3px;}
+.profile-header-card{
+  display:flex; align-items:center; gap:20px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:22px 24px; margin-bottom:22px;
+}
+.profile-meta-row{display:flex; gap:16px; margin-top:8px; flex-wrap:wrap;}
+.profile-meta-item{font-size:12px; color:var(--text-mute); display:flex; align-items:center; gap:5px;}
+.section-title{font-size:15px; margin:24px 0 12px;}
+.account-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; display:flex; align-items:center; justify-content:space-between;}
+.btn-danger{border-color:var(--border-strong); color:var(--danger);}
+.btn-danger:hover{border-color:var(--danger); background:rgba(217,107,90,0.1);}
+.avatar-builder{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:22px;}
+.avatar-builder-row{display:flex; gap:20px; align-items:flex-start;}
+.avatar-builder-preview{width:84px; height:84px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:38px;}
+.swatch-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+.avatar-swatch{width:28px; height:28px; border-radius:50%; border:2px solid transparent; flex-shrink:0;}
+.avatar-swatch.selected{border-color:var(--text);}
+.glyph-row{display:flex; gap:8px; flex-wrap:wrap;}
+.avatar-glyph-btn{
+  width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--surface-2);
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+}
+.avatar-glyph-btn.selected{border-color:var(--accent); background:rgba(79,157,110,0.15);}
+
+.dropzone{
+  border:1.5px dashed var(--border-strong); border-radius:var(--radius); padding:36px 20px; text-align:center;
+  background:var(--surface); cursor:pointer;
+}
+.dropzone:hover{border-color:var(--accent);}
+.dropzone.drag{border-color:var(--accent); background:rgba(79,157,110,0.08);}
+.dropzone-icon{font-size:30px; margin-bottom:10px;}
+.dropzone-title{font-size:14px; font-weight:600; margin-bottom:4px;}
+.dropzone-sub{font-size:12px; color:var(--text-mute);}
+.resume-file-chip{
+  display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:12px 16px; margin-bottom:14px;
+}
+.resume-file-chip span{font-size:13px;}
+.score-ring{
+  width:110px; height:110px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  position:relative; background:conic-gradient(var(--accent) calc(var(--pct) * 1%), var(--surface-2) 0);
+}
+.score-ring-inner{
+  width:88px; height:88px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+.score-ring-num{font-family:var(--font-mono); font-size:24px; font-weight:600;}
+.score-ring-label{font-size:9.5px; color:var(--text-mute); text-transform:uppercase; letter-spacing:.04em;}
+.resume-result-top{display:flex; gap:22px; align-items:center; margin-bottom:22px; flex-wrap:wrap;}
+.resume-roles{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+.role-tag{font-size:12px; padding:5px 12px; border-radius:999px; background:rgba(79,157,110,0.14); color:var(--accent); border:1px solid var(--accent-soft); font-weight:600;}
+.resume-section{margin-bottom:20px;}
+.resume-section h4{font-size:13.5px; margin-bottom:10px; display:flex; align-items:center; gap:7px;}
+.resume-list{list-style:none; display:flex; flex-direction:column; gap:8px;}
+.resume-list li{font-size:13px; line-height:1.5; padding-left:20px; position:relative; color:var(--text-soft);}
+.resume-list.strengths li::before{content:'+'; position:absolute; left:0; color:var(--accent); font-weight:700;}
+.resume-list.improve li::before{content:'!'; position:absolute; left:0; color:var(--gold); font-weight:700;}
+.resume-list.add li::before{content:'+'; position:absolute; left:0; color:var(--accent-soft); font-weight:700;}
+.roadmap-focus-tag{
+  display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 12px; border-radius:9px;
+  background:var(--surface-2); border:1px solid var(--border); margin:0 8px 8px 0; color:var(--text-soft);
+}
+.profile-track{border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; background:var(--surface);}
+.profile-track-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.profile-track-name{font-size:14px; font-weight:600;}
+.profile-track-pct{font-family:var(--font-mono); font-size:12.5px; color:var(--accent);}
+.bar-track{height:7px; border-radius:99px; background:var(--surface-2); overflow:hidden;}
+.bar-fill{height:100%; background:var(--accent); border-radius:99px; transition:width .3s ease;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const FIELDS = [
+  {id:'webdev', name:'Web Development', sub:'Frontend, backend, full-stack'},
+  {id:'devops', name:'DevOps', sub:'CI/CD, containers, cloud infra'},
+  {id:'ml', name:'Machine Learning', sub:'Models, data, deployment'},
+  {id:'appdev', name:'App Development', sub:'Android, iOS, cross-platform'}
+];
+
+const ROADMAPS = {
+  webdev: [
+    {title:'Foundations', topics:['HTML basics','CSS fundamentals','Flexbox and Grid','Responsive design']},
+    {title:'JavaScript core', topics:['JS fundamentals','DOM manipulation','ES6+ features','Async and fetch']},
+    {title:'Frontend framework', topics:['React basics','Components and props','State and hooks','Routing']},
+    {title:'Backend and APIs', topics:['Node.js basics','Express and REST APIs','Databases (SQL/NoSQL)','Auth and security']},
+    {title:'Ship it', topics:['Git and GitHub','CI/CD basics','Hosting and deployment','Portfolio polish']}
+  ],
+  devops: [
+    {title:'Linux and shell', topics:['Linux fundamentals','Shell scripting','Networking basics','File permissions']},
+    {title:'Version control', topics:['Git workflows','Branching strategies','Code review basics','Monorepos']},
+    {title:'Containers', topics:['Docker basics','Images and volumes','Docker Compose','Container security']},
+    {title:'Orchestration', topics:['Kubernetes basics','Pods and services','Helm charts','Scaling and autoscaling']},
+    {title:'CI/CD and cloud', topics:['CI/CD pipelines','Infra as code','Cloud provider basics','Monitoring and logging']}
+  ],
+  ml: [
+    {title:'Math foundations', topics:['Linear algebra','Probability and stats','Calculus for ML','Optimization basics']},
+    {title:'Python for ML', topics:['NumPy and Pandas','Data visualization','Data cleaning','Exploratory analysis']},
+    {title:'Core ML', topics:['Supervised learning','Unsupervised learning','Model evaluation','Feature engineering']},
+    {title:'Deep learning', topics:['Neural network basics','CNNs','RNNs and transformers','Training and tuning']},
+    {title:'Deployment', topics:['Model serving','APIs for ML','Monitoring models','MLOps basics']}
+  ],
+  appdev: [
+    {title:'Foundations', topics:['Programming basics','UI/UX principles','Mobile design patterns','Version control']},
+    {title:'Native basics', topics:['Kotlin or Swift basics','Layouts and views','Navigation','Local storage']},
+    {title:'Cross-platform', topics:['React Native or Flutter','Widgets and components','State management','Native modules']},
+    {title:'Backend integration', topics:['REST APIs','Auth flows','Push notifications','Offline support']},
+    {title:'Ship it', topics:['Testing on devices','App store guidelines','CI/CD for mobile','Portfolio polish']}
+  ]
+};
+
+function totalTopics(fieldId){ return ROADMAPS[fieldId].reduce((a,m)=>a+m.topics.length,0); }
+function fieldProgress(s, fieldId){
+  const fp = s.fields[fieldId];
+  if(!fp) return 0;
+  return Math.round((fp.completed.length/totalTopics(fieldId))*100);
+}
+function moduleComplete(s, fieldId, idx){
+  const fp = s.fields[fieldId];
+  if(!fp) return false;
+  const mod = ROADMAPS[fieldId][idx];
+  return mod.topics.every(t=>fp.completed.includes(idx+':'+t));
+}
+function anyFieldAtLeast(s, pctVal){
+  return Object.keys(s.fields).some(fid=>fieldProgress(s,fid)>=pctVal);
+}
+const BADGE_DEFS = [
+  {id:'sprout', name:'First sprout', desc:'Complete your first topic', icon:'&#127793;', test:s=>Object.values(s.fields).some(f=>f.completed.length>=1)},
+  {id:'module1', name:'Foundations done', desc:'Finish a first module', icon:'&#127811;', test:s=>Object.keys(s.fields).some(fid=>moduleComplete(s,fid,0))},
+  {id:'halfway', name:'Halfway there', desc:'Reach 50% on a roadmap', icon:'&#127807;', test:s=>anyFieldAtLeast(s,50)},
+  {id:'bloom', name:'Full bloom', desc:'Complete an entire roadmap', icon:'&#127799;', test:s=>anyFieldAtLeast(s,100)},
+  {id:'streak7', name:'On a roll', desc:'Reach a streak of 7', icon:'&#128293;', test:s=>s.streak>=7},
+  {id:'streak30', name:'Unstoppable', desc:'Reach a streak of 30', icon:'&#128293;', test:s=>s.streak>=30},
+  {id:'firstproj', name:'Builder', desc:'Add your first project', icon:'&#128295;', test:s=>s.projects.length>=1},
+  {id:'multitrack', name:'Multi-tracker', desc:'Start a second field', icon:'&#127760;', test:s=>Object.keys(s.fields).length>=2}
+];
+
+let state = {
+  screen:'login',
+  authMode:'login',
+  theme:'dark',
+  fields:{},
+  activeField:null,
+  streak:0,
+  projects:[],
+  openModules:{0:true},
+  chat:[{role:'mentor', text:"Hey! I'm your mentor for this roadmap. Ask me anything about a topic, or just say hi."}],
+  chatBusy:false,
+  name:'Aayushi',
+  joined:'Aug 2026',
+  sidebarOpen:true,
+  avatarUrl:null,
+  email:null,
+  resumeScan:null,
+  resumeFileName:null
+};
+
+function earnedBadges(s){ return BADGE_DEFS.filter(b=>b.test(s)); }
+
+async function saveState(){
+  try{
+    await window.storage.set('skilltree_state', JSON.stringify({
+      theme:state.theme, fields:state.fields, activeField:state.activeField, streak:state.streak, projects:state.projects, sidebarOpen:state.sidebarOpen, avatarUrl:state.avatarUrl, email:state.email, name:state.name, resumeScan:state.resumeScan, resumeFileName:state.resumeFileName
+    }));
+  }catch(e){ console.warn('save failed', e); }
+}
+async function loadState(){
+  try{
+    const r = await window.storage.get('skilltree_state');
+    if(r && r.value){
+      const d = JSON.parse(r.value);
+      Object.assign(state, d);
+    }
+  }catch(e){}
+}
+
+function setTheme(t){
+  state.theme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  saveState();
+  render();
+}
+function themeToggleHTML(){
+  return '<div class="theme-toggle"><div class="knob"></div>' +
+    '<button class="' + (state.theme==='dark'?'on':'') + '" onclick="setTheme(\'dark\')" aria-label="Dark theme">&#9789;</button>' +
+    '<button class="' + (state.theme==='light'?'on':'') + '" onclick="setTheme(\'light\')" aria-label="Light theme">&#9728;</button></div>';
+}
+
+function goto(screen){ state.screen = screen; render(); }
+function handleLogin(rawEmail, rawName){
+  const email = (rawEmail || '').toLowerCase() || 'demo@student.com';
+  const isNewIdentity = state.email && state.email !== email;
+  if(isNewIdentity || !state.email){
+    if(state.email && state.email !== email){
+      state.fields = {};
+      state.activeField = null;
+      state.streak = 0;
+      state.projects = [];
+      state.avatarUrl = null;
+      state.chat = [{role:'mentor', text:"Hey! I'm your mentor for this roadmap. Ask me anything about a topic, or just say hi."}];
+      state.openModules = {0:true};
+      state.resumeScan = null;
+      state.resumeFileName = null;
+    }
+    const fallbackName = email.split('@')[0].replace(/[.\-_]/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+    state.name = (rawName && rawName.trim()) ? rawName.trim() : (fallbackName || 'Student');
+    state.email = email;
+    saveState();
+    goto('onboarding');
+    return;
+  }
+  state.email = email;
+  saveState();
+  if(Object.keys(state.fields).length>0){
+    state.activeField = state.activeField || Object.keys(state.fields)[0];
+    goto('tree');
+  } else {
+    goto('onboarding');
+  }
+}
+function logout(){
+  state.screen = 'login';
+  state.authMode = 'login';
+  showAddField = false;
+  showSettings = false;
+  showAvatarBuilder = false;
+  render();
+}
+function startField(id){
+  if(!state.fields[id]) state.fields[id] = {completed:[], startedAt:new Date().toISOString().slice(0,10)};
+  state.activeField = id;
+  state.openModules = {0:true};
+  saveState();
+}
+function switchField(id){ state.activeField = id; state.openModules={0:true}; goto('tree'); }
+function pickOnboardingField(id){ startField(id); goto('tree'); }
+
+function toggleTopic(modIdx, topic){
+  const fp = state.fields[state.activeField];
+  const key = modIdx+':'+topic;
+  const i = fp.completed.indexOf(key);
+  if(i>=0){
+    fp.completed.splice(i,1);
+    state.streak = Math.max(0, state.streak-1);
+  } else {
+    fp.completed.push(key);
+    state.streak = state.streak+1;
+  }
+  saveState(); render();
+}
+function toggleModule(idx){ state.openModules[idx] = !state.openModules[idx]; render(); }
+
+function renderLogin(){
+  const isLogin = state.authMode==='login';
+  return '<div class="center-screen"><div class="auth-card">' +
+    '<div class="auth-logo"><div class="dot"></div><span>SkillTree</span></div>' +
+    '<div class="auth-sub">' + (isLogin?'Welcome back. Keep the streak alive.':'Start growing your skills, one topic at a time.') + '</div>' +
+    '<button class="oauth-btn" onclick="handleLogin(\'google-user@skilltree.app\', document.getElementById(\'login-name\').value.trim())">Continue with Google</button>' +
+    '<button class="oauth-btn" onclick="handleLogin(\'github-user@skilltree.app\', document.getElementById(\'login-name\').value.trim())">Continue with GitHub</button>' +
+    '<div class="divider">or</div>' +
+    '<div class="field"><label>Full name</label><input type="text" id="login-name" placeholder="Your name"></div>' +
+    '<div class="field"><label>Email</label><input type="email" id="login-email" placeholder="name@college.edu"></div>' +
+    '<div class="field"><label>Password</label><input type="password" placeholder="********"></div>' +
+    '<button class="btn btn-primary btn-block" onclick="handleLogin(document.getElementById(\'login-email\').value.trim(), document.getElementById(\'login-name\').value.trim())">' + (isLogin?'Log in':'Create account') + '</button>' +
+    '<div class="auth-switch">' + (isLogin?'New here? ':'Already have an account? ') +
+      '<a onclick="state.authMode=\'' + (isLogin?'signup':'login') + '\'; render();">' + (isLogin?'Create an account':'Log in') + '</a></div>' +
+    '<div class="demo-note">Demo flow, no real authentication is wired up yet.</div>' +
+    '</div></div>';
+}
+
+let onboardPick = null;
+function renderOnboarding(){
+  return '<div class="center-screen"><div class="auth-card" style="width:460px;">' +
+    '<div class="auth-logo"><div class="dot"></div><span>SkillTree</span></div>' +
+    '<div class="auth-sub">Pick a field to start your roadmap. You can add more later.</div>' +
+    '<div class="field-pick">' + FIELDS.map(f=>
+      '<div class="field-card ' + (onboardPick===f.id?'picked':'') + '" onclick="onboardPick=\'' + f.id + '\'; render();">' +
+        '<div class="field-card-title">' + f.name + '</div><div class="field-card-sub">' + f.sub + '</div></div>'
+    ).join('') + '</div>' +
+    '<button class="btn btn-primary btn-block" style="margin-top:22px;" ' + (onboardPick?'':'disabled') +
+      ' onclick="if(onboardPick){ pickOnboardingField(onboardPick); }">Start my roadmap</button>' +
+    '</div></div>';
+}
+
+let showAddField = false;
+function renderAddFieldModal(){
+  const remaining = FIELDS.filter(f=>!state.fields[f.id]);
+  if(remaining.length===0){
+    return '<div class="panel" style="margin-bottom:20px;"><div style="font-size:13.5px; color:var(--text-mute);">' +
+      "You've already started every available field. New tracks coming soon." + '</div></div>';
+  }
+  return '<div class="panel" style="margin-bottom:20px;">' +
+    '<h3 style="font-size:15px; margin-bottom:12px;">Start a new field</h3>' +
+    '<div class="field-pick">' + remaining.map(f=>
+      '<div class="field-card" onclick="startField(\'' + f.id + '\'); showAddField=false; goto(\'dashboard\');">' +
+        '<div class="field-card-title">' + f.name + '</div><div class="field-card-sub">' + f.sub + '</div></div>'
+    ).join('') + '</div>' +
+    '<button class="btn" style="margin-top:14px;" onclick="showAddField=false; render();">Cancel</button>' +
+    '</div>';
+}
+
+function treeSVG(){
+  const fieldId = state.activeField;
+  const fp = state.fields[fieldId];
+  const modules = ROADMAPS[fieldId];
+  const w=680, h=460;
+  const trunkX = w/2, trunkTopY = 86, trunkBotY = h-56;
+  const totalDone = fp.completed.length;
+  const totalAll = totalTopics(fieldId);
+  const growth = totalAll ? totalDone/totalAll : 0;
+
+  let svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">';
+  svg += '<defs>' +
+    '<radialGradient id="glow" cx="50%" cy="38%" r="55%">' +
+      '<stop offset="0%" style="stop-color:var(--accent); stop-opacity:' + (0.16 + growth*0.14) + '"/>' +
+      '<stop offset="100%" style="stop-color:var(--accent); stop-opacity:0"/>' +
+    '</radialGradient>' +
+    '<radialGradient id="ground" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" style="stop-color:var(--border-strong); stop-opacity:0.55"/>' +
+      '<stop offset="100%" style="stop-color:var(--border-strong); stop-opacity:0"/>' +
+    '</radialGradient>' +
+  '</defs>';
+
+  svg += '<circle cx="' + trunkX + '" cy="' + (trunkTopY+40) + '" r="150" fill="url(#glow)"/>';
+  svg += '<ellipse cx="' + trunkX + '" cy="' + (trunkBotY+18) + '" rx="120" ry="16" fill="url(#ground)"/>';
+
+  svg += '<path d="M ' + (trunkX-22) + ' ' + trunkBotY + ' Q ' + (trunkX-40) + ' ' + (trunkBotY+8) + ' ' + (trunkX-52) + ' ' + (trunkBotY+16) +
+    ' M ' + (trunkX+22) + ' ' + trunkBotY + ' Q ' + (trunkX+40) + ' ' + (trunkBotY+8) + ' ' + (trunkX+52) + ' ' + (trunkBotY+16) +
+    '" fill="none" stroke="var(--bark-600)" stroke-width="4" stroke-linecap="round" opacity="0.55"/>';
+
+  svg += '<path d="M ' + (trunkX-13) + ' ' + trunkBotY + ' C ' + (trunkX-16) + ' ' + (trunkTopY+90) + ' ' + (trunkX-9) + ' ' + (trunkTopY+20) + ' ' + trunkX + ' ' + trunkTopY +
+    ' C ' + (trunkX+9) + ' ' + (trunkTopY+20) + ' ' + (trunkX+16) + ' ' + (trunkTopY+90) + ' ' + (trunkX+13) + ' ' + trunkBotY + ' Z" fill="var(--bark-600)"/>';
+
+  const n = modules.length;
+  const branchTips = [];
+  modules.forEach((mod, i)=>{
+    const side = i%2===0 ? -1 : 1;
+    const branchY = trunkBotY - 44 - i*((trunkBotY-trunkTopY-70)/n);
+    const branchLen = 168 + (i%2)*22;
+    const startX = trunkX + side*6;
+    const ctrlX = trunkX + side*90;
+    const endX = trunkX + side*branchLen;
+    const endY = branchY - 58;
+    const modDone = moduleComplete(state, fieldId, i);
+    const doneCount = mod.topics.filter(t=>fp.completed.includes(i+':'+t)).length;
+    const branchGrowth = doneCount/mod.topics.length;
+    const strokeCol = modDone ? 'var(--accent)' : (branchGrowth>0 ? 'var(--bark-500)' : 'var(--bark-600)');
+
+    svg += '<path class="branch-line" d="M ' + startX + ' ' + branchY + ' Q ' + ctrlX + ' ' + (branchY-18) + ' ' + endX + ' ' + endY + '"' +
+      ' fill="none" stroke="' + strokeCol + '" stroke-width="' + (modDone?6:4.5) + '" stroke-linecap="round"/>';
+    branchTips.push({x:endX, y:endY, done:modDone});
+
+    const topics = mod.topics;
+    topics.forEach((t, ti)=>{
+      const frac = (ti+1)/(topics.length+0.5);
+      const lx = ctrlX + (endX-ctrlX)*frac;
+      const ly = (branchY-18) + (endY-(branchY-18))*frac + (ti%2===0?-15:15);
+      const key = i+':'+t;
+      const done = fp.completed.includes(key);
+      const angle = side>0 ? -28 + ti*14 : 208 + ti*14;
+      const leafFill = done ? (ti%2===0 ? 'var(--accent)' : 'var(--accent-soft)') : 'var(--surface-2)';
+      const leafStroke = done ? 'var(--accent-soft)' : 'var(--border-strong)';
+      svg += '<g transform="translate(' + lx + ',' + ly + ') rotate(' + angle + ')">' +
+        '<ellipse class="leaf-dot" cx="0" cy="0" rx="12" ry="6.5" fill="' + leafFill + '" stroke="' + leafStroke + '" stroke-width="1.5">' +
+        '<title>' + t + (done?' complete':' not yet started') + '</title></ellipse></g>';
+    });
+  });
+
+  branchTips.forEach(tip=>{
+    if(tip.done){
+      svg += '<circle cx="' + tip.x + '" cy="' + tip.y + '" r="9" fill="var(--gold)" opacity="0.9"/>';
+    }
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+
+function renderDashboard(){
+  const fieldId = state.activeField;
+  const fp = state.fields[fieldId];
+  const modules = ROADMAPS[fieldId];
+  const p = fieldProgress(state, fieldId);
+  const fieldName = FIELDS.find(f=>f.id===fieldId).name;
+
+  return '<div class="topbar"><div><h1>' + fieldName + '</h1><div class="topbar-sub">Roadmap and progress</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    '<div class="stat-row">' +
+      '<div class="stat"><div class="stat-label">Streak</div><div class="stat-val gold streak-flame">&#128293; ' + state.streak + '</div></div>' +
+      '<div class="stat"><div class="stat-label">Progress</div><div class="stat-val accent">' + p + '%</div></div>' +
+      '<div class="stat"><div class="stat-label">Badges earned</div><div class="stat-val">' + earnedBadges(state).length + ' / ' + BADGE_DEFS.length + '</div></div>' +
+    '</div>' +
+    '<div class="panel"><h3 style="font-size:15px; margin-bottom:10px;">Roadmap</h3>' +
+        modules.map((m,i)=>{
+          const done = m.topics.filter(t=>fp.completed.includes(i+':'+t)).length;
+          const open = !!state.openModules[i];
+          return '<div class="module"><div class="module-head" onclick="toggleModule(' + i + ')">' +
+            '<div class="module-title">' + m.title + '</div><div class="module-meta">' + done + '/' + m.topics.length + '</div></div>' +
+            '<div class="module-body ' + (open?'open':'') + '">' +
+            m.topics.map(t=>{
+              const key=i+':'+t; const d = fp.completed.includes(key);
+              return '<div class="topic-row"><div class="check ' + (d?'done':'') + '" onclick="toggleTopic(' + i + ', ' + JSON.stringify(t).replace(/"/g,'&quot;') + ')">' + (d?'&#10003;':'') + '</div>' +
+                '<div class="topic-name ' + (d?'done':'') + '">' + t + '</div></div>';
+            }).join('') + '</div></div>';
+        }).join('') +
+      '</div>';
+}
+
+function renderTreeGrow(){
+  const fieldId = state.activeField;
+  const p = fieldProgress(state, fieldId);
+  const fieldName = FIELDS.find(f=>f.id===fieldId).name;
+  const stageNames = ['Seed','Sprout','Sapling','Young tree','Full bloom'];
+  const stage = p>=100 ? stageNames[4] : p>=75 ? stageNames[3] : p>=40 ? stageNames[2] : p>=10 ? stageNames[1] : stageNames[0];
+
+  return '<div class="topbar"><div><h1>Your tree</h1><div class="topbar-sub">' + fieldName + ' &middot; ' + stage + '</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    '<div class="stat-row">' +
+      '<div class="stat"><div class="stat-label">Streak</div><div class="stat-val gold streak-flame">&#128293; ' + state.streak + '</div></div>' +
+      '<div class="stat"><div class="stat-label">Growth</div><div class="stat-val accent">' + p + '%</div></div>' +
+      '<div class="stat"><div class="stat-label">Stage</div><div class="stat-val">' + stage + '</div></div>' +
+    '</div>' +
+    '<div class="panel" style="max-width:780px; margin:0 auto;">' + treeSVG() +
+      '<div style="text-align:center; font-size:12px; color:var(--text-mute); margin-top:6px;">Complete topics in the roadmap to grow your tree</div>' +
+    '</div>';
+}
+
+function renderBadges(){
+  const sorted = BADGE_DEFS.slice().sort((a,b)=>(b.test(state)?1:0)-(a.test(state)?1:0));
+  return '<div class="topbar"><div><h1>Badges</h1><div class="topbar-sub">Milestones earned along the way</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    '<div class="badge-grid">' + sorted.map(b=>{
+      const earned = b.test(state);
+      return '<div class="badge-card ' + (earned?'':'locked') + '"><div class="badge-icon">' + b.icon + '</div>' +
+        '<div class="badge-name">' + b.name + '</div><div class="badge-desc">' + b.desc + '</div></div>';
+    }).join('') + '</div>';
+}
+
+function renderProjects(){
+  return '<div class="topbar"><div><h1>Projects</h1><div class="topbar-sub">What you have built along the journey</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    '<div id="proj-form-slot"></div>' +
+    (state.projects.length===0 ? '<div class="panel" style="font-size:13px; color:var(--text-mute); margin-bottom:16px;">No projects added yet.</div>' :
+    '<div class="proj-grid">' + state.projects.map((p,i)=>
+      '<div class="proj-card"><div class="proj-title">' + p.title + '</div><div class="proj-desc">' + p.desc + '</div>' +
+      '<div class="tag-row">' + p.tags.map(t=>'<span class="tag">' + t + '</span>').join('') + '</div>' +
+      '<div class="proj-links">' +
+        (p.github && p.github!=='#' ? '<a href="' + p.github + '" target="_blank">GitHub</a>' : '') +
+        (p.demo && p.demo!=='#' ? '<a href="' + p.demo + '" target="_blank">Live demo</a>' : '') +
+      '</div>' +
+      '<button class="btn" style="margin-top:12px; padding:7px 14px; font-size:12.5px;" onclick="editProject(' + i + ')">Edit</button>' +
+      '</div>'
+    ).join('') + '</div>') +
+    '<button class="add-proj-btn" onclick="toggleProjForm()">+ Add a project</button>';
+}
+let showProjForm=false;
+let editingProjectIndex=null;
+function toggleProjForm(){
+  showProjForm=!showProjForm;
+  if(!showProjForm) editingProjectIndex=null;
+  render();
+  if(showProjForm){ renderProjFormInto(); }
+}
+function editProject(i){
+  editingProjectIndex = i;
+  showProjForm = true;
+  render();
+  renderProjFormInto();
+}
+function renderProjFormInto(){
+  const slot = document.getElementById('proj-form-slot');
+  if(!slot) return;
+  const editing = editingProjectIndex!==null;
+  const p = editing ? state.projects[editingProjectIndex] : {title:'',desc:'',tags:[],github:'',demo:''};
+  const githubVal = (p.github && p.github!=='#') ? p.github : '';
+  const demoVal = (p.demo && p.demo!=='#') ? p.demo : '';
+  slot.innerHTML = '<div class="panel" style="margin-bottom:16px;">' +
+    '<div style="font-size:14px; font-weight:600; margin-bottom:12px;">' + (editing?'Edit project':'Add a project') + '</div>' +
+    '<div class="field"><label>Title</label><input id="pf-title" placeholder="e.g. Weather dashboard" value="' + p.title + '"></div>' +
+    '<div class="field"><label>Description</label><textarea id="pf-desc" placeholder="What does it do, what did you build it with">' + p.desc + '</textarea></div>' +
+    '<div class="field"><label>Tech tags (comma-separated)</label><input id="pf-tags" placeholder="React, Node, MongoDB" value="' + p.tags.join(', ') + '"></div>' +
+    '<div class="field"><label>GitHub link</label><input id="pf-github" placeholder="https://github.com/..." value="' + githubVal + '"></div>' +
+    '<div class="field"><label>Live demo link (optional)</label><input id="pf-demo" placeholder="https://..." value="' + demoVal + '"></div>' +
+    '<div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitProject()">' + (editing?'Save changes':'Add project') + '</button>' +
+    (editing ? '<button class="btn btn-danger" onclick="deleteProject(' + editingProjectIndex + ')">Delete</button>' : '') +
+    '<button class="btn" onclick="toggleProjForm()">Cancel</button></div></div>';
+}
+function submitProject(){
+  const title = document.getElementById('pf-title').value.trim();
+  const desc = document.getElementById('pf-desc').value.trim();
+  const tags = document.getElementById('pf-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const github = document.getElementById('pf-github').value.trim() || '#';
+  const demo = document.getElementById('pf-demo').value.trim() || '#';
+  if(!title) return;
+  if(editingProjectIndex!==null){
+    state.projects[editingProjectIndex] = {title,desc,tags,github,demo};
+  } else {
+    state.projects.push({title,desc,tags,github,demo});
+  }
+  showProjForm=false;
+  editingProjectIndex=null;
+  saveState(); render();
+}
+function deleteProject(i){
+  state.projects.splice(i,1);
+  showProjForm=false;
+  editingProjectIndex=null;
+  saveState(); render();
+}
+
+function renderProfile(){
+  const startedIds = Object.keys(state.fields);
+  return '<div class="topbar"><div><h1>Profile</h1><div class="topbar-sub">Your learning identity across every field</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + '</div></div>' +
+
+    '<div class="profile-header-card" style="flex-direction:column; align-items:center; text-align:center;">' +
+    '<div style="position:relative;">' + avatarHTML('avatar-lg') +
+      '<input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleAvatarFile(this)">' +
+    '</div>' +
+    '<button class="btn" style="margin-top:14px;" onclick="toggleSettings()">' +
+      '<i style="margin-right:6px;">&#9881;</i>' + (showSettings?'Close settings':'Settings') +
+    '</button>' +
+    (showSettings ? renderAvatarSettings() : '') +
+    '<div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border); width:100%;">' +
+      '<div class="profile-name">' + state.name + '</div>' +
+      '<div class="profile-sub">B.Tech student, computer science and engineering</div>' +
+      '<div class="profile-meta-row" style="justify-content:center;">' +
+        '<span class="profile-meta-item">&#128197; Joined ' + state.joined + '</span>' +
+        '<span class="profile-meta-item">&#127760; ' + startedIds.length + ' active track' + (startedIds.length===1?'':'s') + '</span>' +
+        '<span class="profile-meta-item">&#128293; Streak of ' + state.streak + '</span>' +
+      '</div>' +
+    '</div></div>' +
+
+    '<div class="stat-row">' +
+      '<div class="stat"><div class="stat-label">Active tracks</div><div class="stat-val">' + startedIds.length + '</div></div>' +
+      '<div class="stat"><div class="stat-label">Streak</div><div class="stat-val gold">&#128293; ' + state.streak + '</div></div>' +
+      '<div class="stat"><div class="stat-label">Badges</div><div class="stat-val accent">' + earnedBadges(state).length + ' / ' + BADGE_DEFS.length + '</div></div>' +
+    '</div>' +
+
+    '<h3 class="section-title">Your tracks</h3>' +
+    (startedIds.length===0 ? '<div class="panel" style="font-size:13px; color:var(--text-mute);">No tracks started yet.</div>' :
+    startedIds.map(fid=>{
+      const f = FIELDS.find(x=>x.id===fid);
+      const p = fieldProgress(state, fid);
+      const isActive = fid===state.activeField;
+      return '<div class="profile-track"><div class="profile-track-top">' +
+        '<div class="profile-track-name">' + f.name + (isActive?' <span style="color:var(--accent); font-size:11px;">(active)</span>':'') + '</div>' +
+        '<div class="profile-track-pct">' + p + '%</div></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + p + '%;"></div></div>' +
+        (isActive?'':'<button class="btn" style="margin-top:12px;" onclick="switchField(\'' + fid + '\')">Switch to this track</button>') +
+      '</div>';
+    }).join('')) +
+    (showAddField ? renderAddFieldModal() : '<button class="add-proj-btn" style="margin-top:6px;" onclick="showAddField=true; render();">+ Start another field</button>') +
+
+    '<h3 class="section-title">Account</h3>' +
+    '<div class="account-card"><div>' +
+      '<div style="font-size:13.5px; font-weight:600;">' + state.name + '</div>' +
+      '<div style="font-size:12px; color:var(--text-mute); margin-top:2px;">Signed in to SkillTree</div>' +
+    '</div><button class="btn btn-danger" onclick="logout()">Log out</button></div>';
+}
+
+let resumeBusy = false;
+let resumeError = null;
+
+function renderResume(){
+  setTimeout(()=>{
+    const dz = document.getElementById('resume-dropzone');
+    if(dz){
+      dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag'); });
+      dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+      dz.addEventListener('drop', e=>{
+        e.preventDefault(); dz.classList.remove('drag');
+        if(e.dataTransfer.files && e.dataTransfer.files[0]) handleResumeFile(e.dataTransfer.files[0]);
+      });
+    }
+  }, 0);
+
+  const fieldName = FIELDS.find(f=>f.id===state.activeField).name;
+
+  let body = '<div class="dropzone" id="resume-dropzone" onclick="document.getElementById(\'resume-file-input\').click()">' +
+    '<div class="dropzone-icon">&#128196;</div>' +
+    '<div class="dropzone-title">Drop your resume PDF here, or click to browse</div>' +
+    '<div class="dropzone-sub">PDF only &middot; analyzed for the ' + fieldName + ' track</div>' +
+    '<input type="file" id="resume-file-input" accept="application/pdf" style="display:none;" onchange="if(this.files[0]) handleResumeFile(this.files[0])">' +
+    '</div>';
+
+  if(state.resumeFileName){
+    body = '<div class="resume-file-chip"><span>&#128196; ' + state.resumeFileName + '</span>' +
+      '<button class="btn" onclick="document.getElementById(\'resume-file-input-2\').click()">Replace</button>' +
+      '<input type="file" id="resume-file-input-2" accept="application/pdf" style="display:none;" onchange="if(this.files[0]) handleResumeFile(this.files[0])">' +
+      '</div>' + body;
+  }
+
+  if(resumeBusy){
+    body += '<div class="panel" style="text-align:center; color:var(--text-mute); font-size:13px; margin-top:16px;">Reading your resume and comparing it against the ' + fieldName + ' roadmap...</div>';
+  }
+
+  if(resumeError){
+    body += '<div class="panel" style="margin-top:16px; color:var(--danger); font-size:13px;">' + resumeError + '</div>';
+  }
+
+  if(state.resumeScan && !resumeBusy){
+    const r = state.resumeScan;
+    const pct = Math.max(0, Math.min(100, r.score||0));
+    body += '<div class="panel" style="margin-top:20px;">' +
+      '<div class="resume-result-top">' +
+        '<div class="score-ring" style="--pct:' + pct + ';"><div class="score-ring-inner">' +
+          '<div class="score-ring-num">' + pct + '</div><div class="score-ring-label">Readiness</div>' +
+        '</div></div>' +
+        '<div style="flex:1; min-width:200px;">' +
+          '<div style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">Suggested internship / role fit</div>' +
+          '<div class="resume-roles">' + (r.suggestedRoles||[]).map(role=>'<span class="role-tag">' + role + '</span>').join('') + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      (r.summary ? '<div class="resume-section"><p style="font-size:13.5px; color:var(--text-soft); line-height:1.6;">' + r.summary + '</p></div>' : '') +
+
+      '<div class="resume-section"><h4>&#10003; Strengths</h4><ul class="resume-list strengths">' +
+        (r.strengths||[]).map(s=>'<li>' + s + '</li>').join('') + '</ul></div>' +
+
+      '<div class="resume-section"><h4>&#9888; Where it needs improvement</h4><ul class="resume-list improve">' +
+        (r.improvements||[]).map(s=>'<li>' + s + '</li>').join('') + '</ul></div>' +
+
+      '<div class="resume-section"><h4>&#43; What to add</h4><ul class="resume-list add">' +
+        (r.addToResume||[]).map(s=>'<li>' + s + '</li>').join('') + '</ul></div>' +
+
+      (r.roadmapFocus && r.roadmapFocus.length ? '<div class="resume-section"><h4>&#127795; Roadmap topics to prioritize</h4><div>' +
+        r.roadmapFocus.map(t=>'<span class="roadmap-focus-tag">' + t + '</span>').join('') + '</div></div>' : '') +
+    '</div>';
+  }
+
+  return '<div class="topbar"><div><h1>Resume scan</h1><div class="topbar-sub">See where your resume stands and what to fix</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    body;
+}
+
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let text = '';
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return text.slice(0, 9000);
+}
+
+async function handleResumeFile(file){
+  if(file.type !== 'application/pdf'){
+    resumeError = 'Please upload a PDF file.';
+    render();
+    return;
+  }
+  resumeError = null;
+  resumeBusy = true;
+  state.resumeFileName = file.name;
+  render();
+
+  try{
+    const text = await extractPdfText(file);
+    if(!text || text.trim().length < 30){
+      resumeError = "Couldn't read readable text from that PDF. If it's a scanned image, try a text-based export instead.";
+      resumeBusy = false;
+      render();
+      return;
+    }
+    await scanResume(text);
+  }catch(e){
+    resumeError = 'Failed to read that PDF. Try a different file.';
+    resumeBusy = false;
+    render();
+  }
+}
+
+async function scanResume(resumeText){
+  const fieldId = state.activeField;
+  const fieldName = FIELDS.find(f=>f.id===fieldId).name;
+  const fp = state.fields[fieldId];
+  const modules = ROADMAPS[fieldId];
+  const incompleteTopics = [];
+  modules.forEach((m,i)=>{ m.topics.forEach(t=>{ if(!fp.completed.includes(i+':'+t)) incompleteTopics.push(t); }); });
+
+  const sys = "You are a career advisor reviewing a B.Tech engineering student's resume for the \"" + fieldName + "\" track. " +
+    'Respond with ONLY a raw JSON object, no markdown fences, no extra text, matching exactly this shape: ' +
+    '{"score": <0-100 integer readiness score for internships in this field>, ' +
+    '"suggestedRoles": [<2-4 short internship/role titles that fit this resume>], ' +
+    '"summary": "<2-3 sentence honest overall assessment>", ' +
+    '"strengths": [<3-5 short bullet strings, what the resume does well>], ' +
+    '"improvements": [<3-5 short bullet strings, specific weaknesses to fix>], ' +
+    '"addToResume": [<3-5 short bullet strings, concrete things to add, e.g. specific project types, metrics, certifications>], ' +
+    '"roadmapFocus": [<2-5 topic names picked from this list that this student should prioritize next: ' + JSON.stringify(incompleteTopics.slice(0,20)) + '>]} ' +
+    'Be specific and honest, not generic. Base roadmapFocus only on topics from the provided list.';
+
+  try{
+    const response = await fetch("/api/mentor", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        system: sys,
+        messages: [{role:'user', content: 'Here is my resume text:\n\n' + resumeText}]
+      })
+    });
+    const data = await response.json();
+    if(!response.ok){
+      resumeError = (data && data.error && data.error.message) ? data.error.message : 'Resume scan failed.';
+      resumeBusy = false;
+      render();
+      return;
+    }
+    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+    let raw = textBlocks.join('\n').trim();
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if(jsonMatch) raw = jsonMatch[0];
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    }catch(parseErr){
+      console.error('Resume scan raw response:', raw);
+      resumeError = "The mentor's reply wasn't in the expected format. This can happen occasionally — try scanning again.";
+      resumeBusy = false;
+      render();
+      return;
+    }
+    state.resumeScan = parsed;
+    resumeBusy = false;
+    saveState();
+    render();
+  }catch(e){
+    resumeError = "Something went wrong while scanning. Try again.";
+    resumeBusy = false;
+    render();
+  }
+}
+
+function renderMentor(){
+  setTimeout(()=>{
+    const box = document.getElementById('mentor-msgs');
+    if(box) box.scrollTop = box.scrollHeight;
+    const inp = document.getElementById('mentor-input-el');
+    if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMentorMsg(); });
+  }, 0);
+  return '<div class="topbar"><div><h1>AI mentor</h1><div class="topbar-sub">Ask questions, get unstuck, stay motivated</div></div>' +
+    '<div class="topbar-right">' + themeToggleHTML() + avatarClickable('avatar', "goto('profile')") + '</div></div>' +
+    '<div class="mentor-wrap"><div class="mentor-msgs" id="mentor-msgs">' +
+      state.chat.map(m=>'<div class="msg ' + m.role + '">' + m.text + '</div>').join('') +
+      (state.chatBusy?'<div class="msg mentor typing">Thinking...</div>':'') +
+    '</div><div class="mentor-input"><input id="mentor-input-el" placeholder="Ask about a topic, or say you are stuck...">' +
+    '<button class="btn btn-primary" onclick="sendMentorMsg()">Send</button></div></div>';
+}
+
+async function sendMentorMsg(){
+  const inp = document.getElementById('mentor-input-el');
+  const text = inp.value.trim();
+  if(!text || state.chatBusy) return;
+  state.chat.push({role:'user', text});
+  inp.value='';
+  state.chatBusy = true;
+  render();
+
+  const fieldName = FIELDS.find(f=>f.id===state.activeField).name;
+  const p = fieldProgress(state, state.activeField);
+  const sys = 'You are an encouraging, concise AI mentor inside a learning app called SkillTree. The student is on the "' + fieldName + '" roadmap, ' + p + '% complete, with a current streak of ' + state.streak + ' completed topics. Keep replies short (2-5 sentences), warm, and practical. If they ask a technical question, answer it directly and clearly. If they seem discouraged, motivate them without being cheesy.';
+
+  try{
+    const response = await fetch("/api/mentor", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        system: sys,
+        messages: state.chat.slice(1).map(m=>({role: m.role==='user'?'user':'assistant', content:m.text}))
+      })
+    });
+    const data = await response.json();
+    if(!response.ok){
+      const errMsg = (data && data.error && data.error.message) ? data.error.message : ('Request failed (' + response.status + ')');
+      state.chat.push({role:'mentor', text: "Mentor error: " + errMsg});
+    } else {
+      const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+      const reply = textBlocks.join('\n') || "I'm here, could you rephrase that?";
+      state.chat.push({role:'mentor', text: reply});
+    }
+  }catch(e){
+    state.chat.push({role:'mentor', text:"Couldn't reach the mentor server. Make sure you're running this through the local server (node server.js), not by opening the HTML file directly."});
+  }
+  state.chatBusy = false;
+  render();
+}
+
+function sidebarHTML(){
+  const items = [
+    {id:'profile', icon:'&#128100;', label:'Profile'},
+    {id:'tree', icon:'&#127795;', label:'Grow tree'},
+    {id:'dashboard', icon:'&#128220;', label:'Roadmap'},
+    {id:'badges', icon:'&#127894;', label:'Badges'},
+    {id:'projects', icon:'&#128193;', label:'Projects'},
+    {id:'resume', icon:'&#128196;', label:'Resume scan'},
+    {id:'mentor', icon:'&#129302;', label:'AI mentor'}
+  ];
+  const startedIds = Object.keys(state.fields);
+  const collapsed = !state.sidebarOpen;
+  return '<div class="sidebar ' + (collapsed?'collapsed':'') + '">' +
+    '<div class="sidebar-top">' +
+      '<div class="brand"><div class="dot"></div><span class="brand-label">SkillTree</span></div>' +
+      '<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">' + (collapsed?'&#187;':'&#171;') + '</button>' +
+    '</div>' +
+    items.map(it=>'<button class="navitem ' + (state.screen===it.id?'active':'') + '" onclick="goto(\'' + it.id + '\')" title="' + it.label + '">' +
+      '<span class="navicon">' + it.icon + '</span><span class="navlabel">' + it.label + '</span></button>').join('') +
+    '<div class="sidebar-fields"><div class="sidebar-fields-label">Your tracks</div>' +
+      startedIds.map(fid=>{
+        const f = FIELDS.find(x=>x.id===fid);
+        const p = fieldProgress(state, fid);
+        return '<button class="field-switch ' + (fid===state.activeField?'active':'') + '" onclick="switchField(\'' + fid + '\')" title="' + f.name + '">' +
+          '<span>' + f.name + '</span><span class="mini-pct">' + p + '%</span></button>';
+      }).join('') +
+      '<button class="add-field-btn" onclick="goto(\'profile\'); showAddField=true;" title="Add field"><span class="add-field-label">+ Add field</span></button>' +
+    '</div>' +
+    '<div class="sidebar-foot">' + state.name + '</div></div>';
+}
+function avatarHTML(cls){
+  if(state.avatarUrl){
+    return '<img src="' + state.avatarUrl + '" class="' + cls + '" style="object-fit:cover; display:block;">';
+  }
+  return '<div class="' + cls + '">' + state.name[0] + '</div>';
+}
+function avatarClickable(cls, onclickJs){
+  const inner = state.avatarUrl
+    ? '<img src="' + state.avatarUrl + '" class="' + cls + '" style="object-fit:cover; display:block;">'
+    : '<div class="' + cls + '">' + state.name[0] + '</div>';
+  return '<span style="cursor:pointer;" onclick="' + onclickJs + '">' + inner + '</span>';
+}
+function triggerAvatarPick(){ document.getElementById('avatar-file-input').click(); }
+function handleAvatarFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const maxDim = 256;
+      let w = img.width, h = img.height;
+      if(w>h && w>maxDim){ h = Math.round(h*(maxDim/w)); w = maxDim; }
+      else if(h>=w && h>maxDim){ w = Math.round(w*(maxDim/h)); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      state.avatarUrl = canvas.toDataURL('image/jpeg', 0.86);
+      saveState(); render();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function removeAvatar(){ state.avatarUrl = null; showAvatarBuilder = false; saveState(); render(); }
+function toggleSidebar(){ state.sidebarOpen = !state.sidebarOpen; saveState(); render(); }
+
+let showSettings = false;
+function toggleSettings(){ showSettings = !showSettings; if(!showSettings) showAvatarBuilder = false; render(); }
+function renderAvatarSettings(){
+  return '<div class="avatar-builder" style="text-align:left; margin-top:16px;">' +
+    '<div style="font-size:13px; font-weight:600; margin-bottom:10px;">Profile name</div>' +
+    '<div style="display:flex; gap:8px; margin-bottom:18px;">' +
+      '<input type="text" id="settings-name-input" value="' + state.name + '" placeholder="Your name" style="flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:9px 12px; color:var(--text); font-size:13.5px; font-family:var(--font-body);">' +
+      '<button class="btn" onclick="updateProfileName()">Save</button>' +
+    '</div>' +
+    '<div style="font-size:13px; font-weight:600; margin-bottom:12px;">Profile photo</div>' +
+    '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:' + (showAvatarBuilder?'16px':'0') + ';">' +
+      '<button class="btn" onclick="triggerAvatarPick()">' + (state.avatarUrl?'Change photo':'Upload photo') + '</button>' +
+      '<button class="btn" onclick="showAvatarBuilder=!showAvatarBuilder; render();">' + (showAvatarBuilder?'Close avatar builder':'Create avatar') + '</button>' +
+      (state.avatarUrl ? '<button class="btn btn-danger" onclick="removeAvatar()">Remove photo</button>' : '') +
+    '</div>' +
+    (showAvatarBuilder ? renderAvatarBuilder() : '') +
+  '</div>';
+}
+function updateProfileName(){
+  const val = document.getElementById('settings-name-input').value.trim();
+  if(val){ state.name = val; saveState(); render(); }
+}
+
+const AVATAR_COLORS = ['#4F9D6E','#2F7A50','#E3A83B','#8A6B47','#D96B5A','#3A7CA5','#7A5CA0','#16261D'];
+const AVATAR_GLYPHS = ['&#127793;','&#127794;','&#128293;','&#11088;','&#128640;','&#127919;','&#128161;','&#129417;','&#128218;','&#9889;'];
+let showAvatarBuilder = false;
+let builderColor = AVATAR_COLORS[0];
+let builderGlyph = AVATAR_GLYPHS[0];
+let builderUseInitial = false;
+
+function toggleAvatarBuilder(){ showAvatarBuilder = !showAvatarBuilder; render(); }
+function pickBuilderColor(c){ builderColor = c; render(); }
+function pickBuilderGlyph(g){ builderGlyph = g; builderUseInitial = false; render(); }
+function pickBuilderInitial(){ builderUseInitial = true; render(); }
+function buildAvatarDataUrl(bg, glyphHtml){
+  const el = document.createElement('div');
+  el.innerHTML = glyphHtml;
+  const glyphChar = el.textContent;
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">' +
+    '<rect width="200" height="200" rx="100" fill="' + bg + '"/>' +
+    '<text x="100" y="128" font-size="92" text-anchor="middle" font-family="Inter, sans-serif" fill="#F5F8F4">' + glyphChar + '</text>' +
+    '</svg>';
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+function saveBuiltAvatar(){
+  const glyphHtml = builderUseInitial ? state.name[0] : builderGlyph;
+  state.avatarUrl = buildAvatarDataUrl(builderColor, glyphHtml);
+  showAvatarBuilder = false;
+  saveState(); render();
+}
+function renderAvatarBuilder(){
+  const el = document.createElement('div');
+  el.innerHTML = builderUseInitial ? state.name[0] : builderGlyph;
+  const previewChar = el.textContent;
+  return '<div class="avatar-builder"><div class="avatar-builder-row">' +
+    '<div class="avatar-builder-preview" style="background:' + builderColor + ';">' + previewChar + '</div>' +
+    '<div style="flex:1;">' +
+      '<div style="font-size:12.5px; color:var(--text-mute); margin-bottom:8px;">Background color</div>' +
+      '<div class="swatch-row">' + AVATAR_COLORS.map(c=>
+        '<button class="avatar-swatch ' + (builderColor===c?'selected':'') + '" style="background:' + c + ';" onclick="pickBuilderColor(\'' + c + '\')" aria-label="Pick color"></button>'
+      ).join('') + '</div>' +
+      '<div style="font-size:12.5px; color:var(--text-mute); margin-bottom:8px;">Icon</div>' +
+      '<div class="glyph-row">' +
+        '<button class="avatar-glyph-btn ' + (builderUseInitial?'selected':'') + '" onclick="pickBuilderInitial()">' + state.name[0] + '</button>' +
+        AVATAR_GLYPHS.map(g=>
+          '<button class="avatar-glyph-btn ' + (!builderUseInitial && builderGlyph===g?'selected':'') + '" onclick="pickBuilderGlyph(\'' + g + '\')">' + g + '</button>'
+        ).join('') +
+      '</div>' +
+    '</div></div>' +
+    '<div style="display:flex; gap:10px; margin-top:16px;">' +
+      '<button class="btn btn-primary" onclick="saveBuiltAvatar()">Save avatar</button>' +
+      '<button class="btn" onclick="toggleAvatarBuilder()">Cancel</button>' +
+    '</div></div>';
+}
+
+function render(){
+  const app = document.getElementById('app');
+  document.documentElement.setAttribute('data-theme', state.theme);
+
+  if(state.screen==='login'){ app.innerHTML = renderLogin(); return; }
+  if(state.screen==='onboarding'){ app.innerHTML = renderOnboarding(); return; }
+
+  let content = '';
+  if(state.screen==='tree') content = renderTreeGrow();
+  else if(state.screen==='dashboard') content = renderDashboard();
+  else if(state.screen==='badges') content = renderBadges();
+  else if(state.screen==='projects') content = renderProjects();
+  else if(state.screen==='resume') content = renderResume();
+  else if(state.screen==='mentor') content = renderMentor();
+  else if(state.screen==='profile') content = renderProfile();
+
+  app.innerHTML = '<div class="shell">' + sidebarHTML() + '<div class="main">' + content + '</div></div>';
+
+  if(state.screen==='projects' && showProjForm) renderProjFormInto();
+}
+
+(async function init(){
+  await loadState();
+  document.documentElement.setAttribute('data-theme', state.theme);
+  if(Object.keys(state.fields).length>0 && state.screen==='login'){
+    state.activeField = state.activeField || Object.keys(state.fields)[0];
+    state.screen = 'tree';
+  }
+  render();
+})();
+</script>
+</body>
+</html>
