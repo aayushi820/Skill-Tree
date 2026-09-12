@@ -20,7 +20,10 @@ app.use(express.json({ limit: '2mb' }));
 // Serve SkillTree files
 app.use(express.static(__dirname));
 
-
+// Open SkillTree as the homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'skilltree-app.html'));
+});
 // ==================================================
 // AI / GEMINI ENDPOINT
 // ==================================================
